@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>3 BROTHERS | GESTION DES STOCKS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --gta-green: #46a046; --gta-bg: #050505; --gta-card: #111; --gta-border: #222; }
+        body { background: var(--gta-bg); color: #fff; font-family: 'Arial Black', sans-serif; text-transform: uppercase; margin: 0; font-size: 0.72em; }
+        .navbar { background: #000; border-bottom: 3px solid var(--gta-green); display: flex; padding: 10px 20px; gap: 20px; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .nav-link { color: #888; text-decoration: none; font-size: 1.1em; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { color: var(--gta-green); }
+        .cash-display { margin-left: auto; color: var(--gta-green); font-size: 1.5em; }
+
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+        .gta-card { background: var(--gta-card); border: 1px solid var(--gta-border); border-left: 4px solid var(--gta-green); padding: 15px; margin-bottom: 15px; }
+        
+        .cat-title { color: var(--gta-green); font-style: italic; border-bottom: 1px solid #222; padding: 8px; margin-top: 15px; background: #0a0a0a; letter-spacing: 1px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        td { padding: 10px 5px; border-bottom: 1px solid #1a1a1a; }
+        
+        input { background: #000; border: 1px solid #333; color: #fff; padding: 6px; width: 60px; outline: none; text-align: center; }
+        .gta-btn { background: #222; color: #fff; border: 1px solid #333; padding: 8px 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .gta-btn:hover { background: var(--gta-green); color: #000; }
+        
+        .lab-box { display: flex; flex-direction: column; gap: 10px; background: #000; padding: 15px; border: 1px solid #222; margin-top: 10px; }
+        .formula { font-size: 0.8em; color: #777; margin-bottom: 5px; text-transform: none; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div style="font-style: italic; font-size: 1.2em; margin-right: 20px; color: var(--gta-green);">3 BROTHERS HQ</div>
+    <a href="mainframe.html" class="nav-link">FLUX</a>
+    <a href="stock.html" class="nav-link active">STOCKS</a>
+    <a href="commerce.html" class="nav-link">COMMERCE</a>
+    <a href="historique.html" class="nav-link">HISTORIQUE</a>
+    <div class="cash-display" id="cash-top">0 $</div>
+</nav>
+
+<div class="container">
+    <div class="grid">
+        <!-- INVENTAIRE -->
+        <div>
+            <div class="gta-card">
+                <h3>📦 INVENTAIRE RÉSEAU</h3>
+                <div id="inventory-content">SYNCHRONISATION...</div>
+            </div>
+        </div>
+
+        <!-- AUTOMATISATION -->
+        <div>
+            <div class="gta-card">
+                <h3>🌱 UNITÉ DE CULTURE (WEED)</h3>
+                <div class="formula">Usage : 1 Culture = 1 Terreau, 1 Lampe UV, 2 Eaux, 1 Graine.<br>Gain : +8 Têtes de Weed.</div>
+                <div class="lab-box">
+                    <input type="number" id="cult-qty" placeholder="NOMBRE DE CULTURES">
+                    <button class="gta-btn" onclick="runCulture()">LANCER LA RÉCOLTE</button>
+                </div>
+            </div>
+
+            <div class="gta-card">
+                <h3>🧪 CONDITIONNEMENT (POCHONNAGE)</h3>
+                <div class="formula">Usage : 2 Têtes de Weed + 1 Pochon Vide = 1 Pochon Plein.</div>
+                <div class="lab-box">
+                    <input type="number" id="tetes-to-process" placeholder="NB DE TÊTES À TRAITER">
+                    <button class="gta-btn" onclick="runPackingByTetes()">BROYER ET POCHONNER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const client = supabase.createClient("https://pbcnioihtzgytunkizbi.supabase.co", "sb_publishable_zbH8z6RmfayN8nbsu-99bg_vpRVe0n_");
+
+    async function loadStock() {
+        const { data: items } = await client.from('stocks').select('*').order('name');
+        const categories = { 
+            "PRODUITS": ["Pochon de Weed", "Tête de Weed", "Pochon de Meth", "Pochon de Coke"], 
+            "MATIÈRES PREMIÈRES": ["Lampe Uv", "Terreau", "Pot de Graine", "Bouteille d'eau", "Pochon vide"]
+        };
+        let inventoryData = { "PRODUITS": [], "MATIÈRES PREMIÈRES": [], "AUTRES": [] };
+        
+        items?.forEach(item => {
+            if(item.name === "Cash") { document.getElementById('cash-top').innerText = item.quantity.toLocaleString() + " $"; return; }
+            if(categories["PRODUITS"].includes(item.name)) inventoryData["PRODUITS"].push(item);
+            else if(categories["MATIÈRES PREMIÈRES"].includes(item.name)) inventoryData["MATIÈRES PREMIÈRES"].push(item);
+            else inventoryData["AUTRES"].push(item);
+        });
+
+        let html = "";
+        for (let [cat, list] of Object.entries(inventoryData)) {
+            if(list.length === 0) continue;
+            html += `<div class="cat-title">${cat}</div><table>`;
+            list.forEach(i => {
+                html += `<tr><td style="width:50%">${i.name}</td><td><b style="color:var(--gta-green); font-size:1.2em;">${i.quantity}</b></td>
+                <td style="text-align:right"><input type="number" id="qty-${i.id}" placeholder="0">
+                <button class="gta-btn" onclick="editQty(${i.id}, ${i.quantity}, true)">+</button>
+                <button class="gta-btn" onclick="editQty(${i.id}, ${i.quantity}, false)" style="background:#441111">-</button></td></tr>`;
+            });
+            html += `</table>`;
+        }
+        document.getElementById('inventory-content').innerHTML = html;
+    }
+
+    async function editQty(id, current, add) {
+        const val = parseInt(document.getElementById(`qty-${id}`).value);
+        if(!val || val <= 0) return;
+        await client.from('stocks').update({ quantity: add ? current + val : current - val }).eq('id', id);
+        loadStock();
+    }
+
+    async function runCulture() {
+        const n = parseInt(document.getElementById('cult-qty').value);
+        if(!n || n <= 0) return;
+        const { data: st } = await client.from('stocks').select('*');
+        
+        const req = { "Terreau": n, "Lampe Uv": n, "Bouteille d'eau": n*2, "Pot de Graine": n };
+        for(let [name, qty] of Object.entries(req)) {
+            let item = st.find(i => i.name === name);
+            if(!item || item.quantity < qty) return alert("MANQUE DE : " + name);
+        }
+
+        for(let [name, qty] of Object.entries(req)) {
+            let item = st.find(i => i.name === name);
+            await client.from('stocks').update({ quantity: item.quantity - qty }).eq('name', name);
+        }
+        let weed = st.find(i => i.name === "Tête de Weed");
+        await client.from('stocks').update({ quantity: (weed?.quantity || 0) + (n * 8) }).eq('name', "Tête de Weed");
+        
+        alert(`RÉCOLTE RÉUSSIE : +${n*8} TÊTES`);
+        loadStock();
+    }
+
+    async function runPackingByTetes() {
+        const tetesToUse = parseInt(document.getElementById('tetes-to-process').value);
+        if(!tetesToUse || tetesToUse < 2) return alert("IL FAUT AU MOINS 2 TÊTES");
+
+        const { data: st } = await client.from('stocks').select('*');
+        
+        const tetesItem = st.find(i => i.name === "Tête de Weed");
+        const videsItem = st.find(i => i.name === "Pochon vide");
+        const pleinsItem = st.find(i => i.name === "Pochon de Weed");
+
+        // Calcul du nombre de pochons possibles
+        const pochonsProduits = Math.floor(tetesToUse / 2);
+        const tetesConsommees = pochonsProduits * 2; // On ne consomme que ce qui est divisible par 2
+
+        if(!tetesItem || tetesItem.quantity < tetesConsommees) return alert("PAS ASSEZ DE TÊTES EN STOCK");
+        if(!videsItem || videsItem.quantity < pochonsProduits) return alert(`PAS ASSEZ DE POCHONS VIDES (BESOIN DE ${pochonsProduits})`);
+
+        // Mise à jour BDD
+        await client.from('stocks').update({ quantity: tetesItem.quantity - tetesConsommees }).eq('name', "Tête de Weed");
+        await client.from('stocks').update({ quantity: videsItem.quantity - pochonsProduits }).eq('name', "Pochon vide");
+        await client.from('stocks').update({ quantity: (pleinsItem?.quantity || 0) + pochonsProduits }).eq('name', "Pochon de Weed");
+
+        alert(`TRAITEMENT RÉUSSI : ${tetesConsommees} TÊTES UTILISÉES POUR CRÉER ${pochonsProduits} POCHONS.`);
+        document.getElementById('tetes-to-process').value = "";
+        loadStock();
+    }
+
+    window.onload = loadStock;
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>3 BROTHERS | HISTORIQUE DES FLUX</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --gta-green: #46a046; --gta-bg: #050505; --gta-card: #111; --gta-border: #222; --gta-red: #cc2222; }
+        body { background: var(--gta-bg); color: #fff; font-family: 'Arial Black', sans-serif; text-transform: uppercase; margin: 0; font-size: 0.72em; }
+        
+        .navbar { background: #000; border-bottom: 3px solid var(--gta-green); display: flex; padding: 10px 20px; gap: 20px; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .nav-link { color: #888; text-decoration: none; font-size: 1.1em; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { color: var(--gta-green); }
+        .cash-display { margin-left: auto; color: var(--gta-green); font-size: 1.5em; }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .gta-card { background: var(--gta-card); border: 1px solid var(--gta-border); border-left: 4px solid var(--gta-green); padding: 20px; }
+        
+        h3 { color: var(--gta-green); font-style: italic; margin: 0 0 15px 0; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; }
+        .filter-btn { background: #000; border: 1px solid #333; color: #666; padding: 8px 15px; cursor: pointer; font-size: 0.8em; text-transform: uppercase; }
+        .filter-btn.active { border-color: var(--gta-green); color: var(--gta-green); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: #444; font-size: 0.8em; padding: 10px; border-bottom: 2px solid #222; }
+        td { padding: 12px 10px; border-bottom: 1px solid #1a1a1a; font-family: sans-serif; text-transform: none; }
+        
+        .type-badge { padding: 3px 8px; border-radius: 3px; font-size: 0.8em; font-weight: bold; font-family: 'Arial Black', sans-serif; text-transform: uppercase; }
+        .badge-vente { background: #1a331a; color: var(--gta-green); }
+        .badge-rachat { background: #331a1a; color: var(--gta-red); }
+        .badge-service { background: #332b1a; color: #ffbb00; }
+        .badge-autre { background: #222; color: #888; }
+
+        .m-positive { color: var(--gta-green); font-weight: bold; font-family: 'Arial Black'; }
+        .m-negative { color: var(--gta-red); font-weight: bold; font-family: 'Arial Black'; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div style="font-style: italic; font-size: 1.2em; margin-right: 20px; color: var(--gta-green);">3 BROTHERS HQ</div>
+    <a href="mainframe.html" class="nav-link">FLUX</a>
+    <a href="stock.html" class="nav-link">STOCKS</a>
+    <a href="commerce.html" class="nav-link">COMMERCE</a>
+    <a href="historique.html" class="nav-link active">HISTORIQUE</a>
+    <div class="cash-display" id="cash-top">0 $</div>
+</nav>
+
+<div class="container">
+    <div class="gta-card">
+        <h3>📂 ARCHIVES DES OPÉRATIONS</h3>
+        
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterLogs('ALL', this)">TOUT</button>
+            <button class="filter-btn" onclick="filterLogs('VENTE', this)">VENTES</button>
+            <button class="filter-btn" onclick="filterLogs('RACHAT', this)">RACHATS</button>
+            <button class="filter-btn" onclick="filterLogs('SERVICE', this)">SERVICES</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>DATE / HEURE</th>
+                    <th>OPÉRATION</th>
+                    <th>DÉTAILS</th>
+                    <th style="text-align:right">MONTANT</th>
+                </tr>
+            </thead>
+            <tbody id="log-table">
+                <!-- Rempli par JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const client = supabase.createClient("https://pbcnioihtzgytunkizbi.supabase.co", "sb_publishable_zbH8z6RmfayN8nbsu-99bg_vpRVe0n_");
+
+    async function updateCash() {
+        const { data } = await client.from('stocks').select('quantity').eq('name', 'Cash').single();
+        if(data) document.getElementById('cash-top').innerText = data.quantity.toLocaleString() + " $";
+    }
+
+    async function loadLogs(filter = 'ALL') {
+        let query = client.from('logs').select('*').order('created_at', { ascending: false });
+        
+        if (filter !== 'ALL') {
+            query = query.ilike('action', `%${filter}%`);
+        }
+
+        const { data: logs, error } = await query;
+        
+        let html = "";
+        logs?.forEach(log => {
+            const date = new Date(log.created_at).toLocaleString('fr-FR', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+
+            // Détermination du badge et de la classe de montant
+            let badgeClass = "badge-autre";
+            if(log.action.includes("VENTE")) badgeClass = "badge-vente";
+            else if(log.action.includes("RACHAT")) badgeClass = "badge-rachat";
+            else if(log.action.includes("SERVICE")) badgeClass = "badge-service";
+
+            const montantClass = log.montant >= 0 ? "m-positive" : "m-negative";
+            const montantSigne = log.montant >= 0 ? "+" : "";
+
+            html += `
+            <tr>
+                <td style="color:#666; font-size:0.9em;">${date}</td>
+                <td><span class="type-badge ${badgeClass}">${log.action}</span></td>
+                <td style="color:#ccc;">${log.details || '-'}</td>
+                <td style="text-align:right" class="${montantClass}">${montantSigne}${log.montant} $</td>
+            </tr>`;
+        });
+
+        document.getElementById('log-table').innerHTML = html || "<tr><td colspan='4' style='text-align:center; color:#444;'>AUCUNE ARCHIVE DISPONIBLE</td></tr>";
+    }
+
+    function filterLogs(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadLogs(type);
+    }
+
+    window.onload = () => {
+        updateCash();
+        loadLogs();
+    };
+</script>
+</body>
+</html>

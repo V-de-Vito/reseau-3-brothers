@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>3 BROTHERS | RÉSEAU</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --gta-green: #46a046; --gta-bg: #050505; --gta-card: #111; }
+        body { background: var(--gta-bg); color: #fff; font-family: 'Arial Black', sans-serif; text-transform: uppercase; margin: 0; font-size: 0.75em; }
+        .container { max-width: 450px; margin: 12vh auto; padding: 20px; }
+        .gta-card { background: var(--gta-card); border: 1px solid #222; border-left: 4px solid var(--gta-green); padding: 30px; }
+        .tab-btns { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; }
+        .tab-btn { background: none; border: none; color: #444; cursor: pointer; font-weight: 900; padding: 10px; text-transform: uppercase; }
+        .tab-btn.active { color: var(--gta-green); border-bottom: 2px solid var(--gta-green); }
+        input { background: #000; border: 1px solid #333; color: #fff; padding: 15px; width: 100%; box-sizing: border-box; margin-bottom: 15px; outline: none; text-align: center; font-size: 1.1em; }
+        .gta-btn { background: #222; color: #fff; border: 1px solid #333; padding: 15px; width: 100%; cursor: pointer; font-weight: 900; text-transform: uppercase; transition: 0.2s; }
+        .gta-btn:hover { background: var(--gta-green); color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tab-btns">
+        <button id="t-login" class="tab-btn active" onclick="switchTab('login')">CONNEXION</button>
+        <button id="t-reg" class="tab-btn" onclick="switchTab('register')">CRÉER COMPTE</button>
+    </div>
+
+    <div class="gta-card">
+        <h2 id="auth-title" style="color:var(--gta-green); margin-top:0; text-align:center;">LOGIN</h2>
+        
+        <input type="text" id="user-field" placeholder="NOM DU GANG">
+        <input type="password" id="pass-field" placeholder="MOT DE PASSE">
+        <input type="text" id="key-field" placeholder="CLÉ D'INVITATION" style="display:none;">
+        
+        <button class="gta-btn" onclick="handleAuth()">INITIALISER LA SESSION</button>
+    </div>
+</div>
+
+<script>
+    const client = supabase.createClient("https://pbcnioihtzgytunkizbi.supabase.co", "sb_publishable_zbH8z6RmfayN8nbsu-99bg_vpRVe0n_");
+    
+    let mode = 'login';
+
+    function switchTab(t) {
+        mode = t;
+        document.getElementById('t-login').classList.toggle('active', t === 'login');
+        document.getElementById('t-reg').classList.toggle('active', t === 'register');
+        document.getElementById('key-field').style.display = t === 'register' ? 'block' : 'none';
+    }
+
+    async function handleAuth() {
+        // Suppression du .toUpperCase() pour tester la correspondance exacte
+        const u = document.getElementById('user-field').value.trim();
+        const p = document.getElementById('pass-field').value.trim();
+        const k = document.getElementById('key-field').value.trim();
+
+        if (mode === 'login') {
+            const { data, error } = await client
+                .from('comptes_gangs')
+                .select('*')
+                .eq('nom_gang', u)
+                .eq('password', p)
+                .single();
+
+            if (error) {
+                console.error("Erreur détaillée:", error);
+                alert("ACCÈS REFUSÉ : Identifiants incorrects ou problème de base de données.");
+                return;
+            }
+
+            if (data) {
+                // Stockage des informations de session
+                sessionStorage.setItem('gangName', data.nom_gang);
+                
+                // REDIRECTION : Vérification de la clé ADMIN
+                if (data.cle_utilisee === "ADMIN") {
+                    sessionStorage.setItem('adminAccess', 'true');
+                    window.location.href = "mainframe.html";
+                } else {
+                    // C'est un client classique
+                    window.location.href = "commandes.html";
+                }
+            }
+        } else {
+            // INSCRIPTION
+            if(!k) return alert("Clé requise");
+
+            // Vérification invitation
+            const { data: invite, error: inviteErr } = await client
+                .from('invitations')
+                .select('*')
+                .eq('code', k)
+                .eq('utilise', false)
+                .single();
+
+            if (inviteErr || !invite) return alert("CLÉ INVALIDE");
+
+            // Création compte
+            const { error: regErr } = await client
+                .from('comptes_gangs')
+                .insert([{ nom_gang: u, password: p, cle_utilisee: k }]);
+
+            if (regErr) return alert("NOM DÉJÀ PRIS");
+
+            // Update invitation
+            await client.from('invitations').update({ utilise: true }).eq('code', k);
+
+            alert("COMPTE CRÉÉ !");
+            switchTab('login');
+        }
+    }
+</script>
+</body>
+</html>

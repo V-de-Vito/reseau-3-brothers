@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>3 BROTHERS | ESPACE CLIENT</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --gta-green: #46a046; --gta-bg: #050505; --gta-card: #111; --gta-red: #cc2222; }
+        body { background: var(--gta-bg); color: #fff; font-family: 'Arial Black', sans-serif; text-transform: uppercase; margin: 0; font-size: 0.72em; }
+        
+        .navbar { background: #000; border-bottom: 3px solid var(--gta-green); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+        .gta-card { background: var(--gta-card); border: 1px solid #222; border-left: 4px solid var(--gta-green); padding: 20px; margin-bottom: 20px; }
+        
+        h3 { color: var(--gta-green); font-style: italic; margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        label { color: #666; font-size: 0.8em; display: block; margin-bottom: 5px; }
+        
+        select, input { background: #000; border: 1px solid #333; color: #fff; padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; outline: none; font-family: 'Arial Black'; }
+        
+        .gta-btn { background: #222; color: #fff; border: 1px solid #333; padding: 12px; width: 100%; cursor: pointer; font-weight: 900; text-transform: uppercase; transition: 0.2s; }
+        .gta-btn:hover { background: var(--gta-green); color: #000; border-color: var(--gta-green); }
+        .btn-cancel { background: #300; color: #f66; border-color: #500; margin-top: 10px; font-size: 0.8em; padding: 5px; }
+
+        .simulation { background: #080808; border: 1px dashed #333; padding: 10px; margin-bottom: 15px; }
+        .sim-val { color: var(--gta-green); float: right; }
+        
+        .chat-box { height: 150px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid #222; margin: 10px 0; display: flex; flex-direction: column; gap: 5px; }
+        .msg { padding: 6px 10px; border-radius: 4px; font-family: sans-serif; text-transform: none; max-width: 85%; font-size: 0.9em; }
+        .msg.admin { background: var(--gta-green); color: #000; align-self: flex-start; }
+        .msg.gang { background: #333; color: #fff; align-self: flex-end; }
+        
+        .status-badge { display: inline-block; padding: 3px 10px; background: #000; border: 1px solid var(--gta-green); color: var(--gta-green); font-weight: bold; margin-bottom: 10px; }
+        .phone-display { color: #aaa; font-size: 0.8em; font-family: sans-serif; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div style="font-size: 1.5em; font-style: italic; color: var(--gta-green);">3 BROTHERS | RÉSEAU</div>
+    <div id="gang-display" style="letter-spacing: 2px;">IDENTIFICATION...</div>
+    <button onclick="logout()" style="background:none; border:1px solid #444; color:#888; cursor:pointer; padding:5px 10px; font-weight: bold;">DECONNEXION</button>
+</nav>
+
+<div class="container">
+    <div class="grid">
+        <!-- FORMULAIRE ET TARIFS -->
+        <div>
+            <div class="gta-card" style="border-left-color: #ff9900;">
+                <h3 style="color: #ff9900;">📊 GRILLE TARIFAIRE</h3>
+                <div style="font-size: 0.9em; line-height: 1.8;">
+                    ACHAT POCHON : <span style="color:white">20$ / u</span><br>
+                    RACHAT TÊTE : <span style="color:white">6$ / u</span><br>
+                    TRAITEMENT : <span style="color:white">5$ / pochon</span>
+                </div>
+            </div>
+
+            <div class="gta-card">
+                <h3>NOUVELLE TRANSMISSION</h3>
+                <label>TYPE DE SERVICE :</label>
+                <select id="c-type" onchange="updateSim()">
+                    <option value="ACHAT">ACHAT DE MARCHANDISE (POCHONS)</option>
+                    <option value="RACHAT">VENTE DE MATIÈRE (TÊTES)</option>
+                    <option value="TRAITEMENT">SERVICE DE TRAITEMENT</option>
+                </select>
+
+                <label>QUANTITÉ :</label>
+                <input type="number" id="c-qty" placeholder="0" oninput="updateSim()">
+
+                <label>VOTRE TÉLÉPHONE (FACULTATIF) :</label>
+                <input type="text" id="c-phone" placeholder="EX: 555-0102">
+                
+                <div class="simulation">
+                    <div id="sim-text">TOTAL À RÉGLER :</div>
+                    <div id="sim-price" class="sim-val">0 $</div>
+                    <div style="clear:both"></div>
+                </div>
+
+                <button class="gta-btn" onclick="sendOrder()">INITIALISER LE FLUX</button>
+            </div>
+        </div>
+
+        <!-- LISTE DES COMMANDES -->
+        <div>
+            <h3 style="margin-top:0;">SUIVI DES TRANSMISSIONS</h3>
+            <div id="orders-list">CHARGEMENT...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const client = supabase.createClient("https://pbcnioihtzgytunkizbi.supabase.co", "sb_publishable_zbH8z6RmfayN8nbsu-99bg_vpRVe0n_");
+    const currentGang = sessionStorage.getItem('gangName');
+
+    if (!currentGang) { window.location.href = "index.html"; } 
+    else { document.getElementById('gang-display').innerText = currentGang; }
+
+    function updateSim() {
+        const type = document.getElementById('c-type').value;
+        const qty = parseInt(document.getElementById('c-qty').value) || 0;
+        const simText = document.getElementById('sim-text');
+        const simPrice = document.getElementById('sim-price');
+
+        if (type === "ACHAT") {
+            simText.innerText = "PRIX TOTAL À PAYER :";
+            simPrice.innerText = (qty * 20) + " $";
+            simPrice.style.color = "var(--gta-green)";
+        } else if (type === "RACHAT") {
+            simText.innerText = "VOTRE GAIN ESTIMÉ :";
+            simPrice.innerText = (qty * 6) + " $";
+            simPrice.style.color = "#3498db";
+        } else {
+            const pochons = Math.floor(qty / 2);
+            simText.innerText = `FRAIS DE TRAITEMENT (${pochons} POCHONS) :`;
+            simPrice.innerText = (pochons * 5) + " $";
+            simPrice.style.color = "#e67e22";
+        }
+    }
+
+    async function sendOrder() {
+        const type = document.getElementById('c-type').value;
+        const qty = document.getElementById('c-qty').value;
+        const phone = document.getElementById('c-phone').value;
+        const price = document.getElementById('sim-price').innerText.replace(' $', '');
+
+        if(!qty || qty <= 0) return alert("INDIQUER UNE QUANTITÉ");
+
+        // On intègre le numéro de téléphone directement dans les détails pour l'admin
+        const contact = phone ? ` | TÉL: ${phone}` : "";
+        const details = `${type} | ${qty} UNITE(S)${contact}`;
+
+        const { error } = await client.from('commandes').insert([{
+            nom_gang: currentGang,
+            details: details,
+            prix_total: price,
+            statut: 'TRANSMIS'
+        }]);
+
+        if(!error) {
+            document.getElementById('c-qty').value = "";
+            document.getElementById('c-phone').value = "";
+            updateSim();
+            fetchOrders();
+        }
+    }
+
+    async function fetchOrders() {
+        const { data: ords } = await client.from('commandes').select('*').eq('nom_gang', currentGang).order('created_at', { ascending: false });
+
+        let html = "";
+        for (let o of ords || []) {
+            const { data: msgs } = await client.from('messages').select('*').eq('commande_id', o.id).order('created_at', { ascending: true });
+
+            html += `
+            <div class="gta-card">
+                <div style="display:flex; justify-content:space-between;">
+                    <div>
+                        <div class="status-badge">${o.statut}</div>
+                        <div style="font-size:1.1em;">${o.details}</div>
+                    </div>
+                    <div style="color:var(--gta-green); font-size:1.3em;">${o.prix_total} $</div>
+                </div>
+
+                <div class="chat-box">${msgs?.map(m => `<div class="msg ${m.expediteur === 'ADMIN' ? 'admin' : 'gang'}">${m.texte}</div>`).join('')}</div>
+
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="reply-${o.id}" placeholder="MESSAGE..." style="margin-bottom:0;">
+                    <button class="gta-btn" style="width:80px;" onclick="sendReply(${o.id})">OK</button>
+                </div>
+
+                ${o.statut === 'TRANSMIS' ? `<button class="gta-btn btn-cancel" onclick="cancelOrder(${o.id})">ANNULER LA TRANSMISSION</button>` : ''}
+            </div>`;
+        }
+        document.getElementById('orders-list').innerHTML = html || "AUCUNE TRANSMISSION";
+    }
+
+    async function cancelOrder(id) {
+        if(confirm("ANNULER CETTE COMMANDE ?")) {
+            await client.from('commandes').delete().eq('id', id);
+            fetchOrders();
+        }
+    }
+
+    async function sendReply(id) {
+        const t = document.getElementById(`reply-${id}`).value;
+        if(!t) return;
+        await client.from('messages').insert([{ commande_id: id, expediteur: currentGang, texte: t }]);
+        document.getElementById(`reply-${id}`).value = "";
+        fetchOrders();
+    }
+
+    function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+    window.onload = fetchOrders;
+    setInterval(fetchOrders, 10000);
+</script>
+</body>
+</html>
