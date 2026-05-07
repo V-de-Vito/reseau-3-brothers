@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palace Club - Dossier de Reprise Miles</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Orbitron:wght@400;700&family=Permanent+Marker&display=swap');
+
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --neon-purple: #9d00ff;
+            --gold: #ffd700;
+            --dark-bg: #050505;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle, rgba(157,0,255,0.2) 0%, rgba(5,5,5,1) 70%);
+            border-bottom: 4px solid var(--neon-pink);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        h1 {
+            font-family: 'Monoton', cursive;
+            font-size: 7rem;
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink);
+            margin: 0;
+            animation: flicker 2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink); }
+            20%, 24%, 55% { text-shadow: none; }
+        }
+
+        .subtitle {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 2rem;
+            color: var(--gold);
+            transform: rotate(-3deg);
+            margin-top: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        section {
+            background: rgba(20, 20, 20, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+            margin-bottom: 60px;
+            backdrop-filter: blur(5px);
+        }
+
+        h2 {
+            font-family: 'Monoton', cursive;
+            font-size: 2.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--neon-blue);
+            display: inline-block;
+        }
+
+        h3 { color: var(--gold); text-transform: uppercase; margin-top: 0; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 25px;
+            border: 1px solid var(--neon-purple);
+            transition: 0.3s;
+        }
+
+        .card:hover { transform: translateY(-5px); box-shadow: 0 0 20px var(--neon-purple); }
+
+        .argument-list { list-style: none; padding: 0; }
+        .argument-list li { margin-bottom: 15px; padding-left: 30px; position: relative; }
+        .argument-list li::before { content: '⚡'; position: absolute; left: 0; color: var(--neon-pink); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: var(--neon-purple); padding: 15px; text-align: left; }
+        td { padding: 15px; border-bottom: 1px solid #333; }
+
+        .highlight { color: var(--neon-pink); font-weight: bold; }
+
+        .disco-ball {
+            width: 80px;
+            height: 80px;
+            background: url('https://www.transparenttextures.com/patterns/mirrored-squares.png'), radial-gradient(circle, #fff, #ccc);
+            border-radius: 50%;
+            box-shadow: 0 0 20px #fff;
+            animation: rotate 4s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .footer-miles {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 2rem;
+            color: var(--neon-pink);
+            text-align: center;
+            margin: 40px 0;
+            text-shadow: 2px 2px 0px #000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="disco-ball"></div>
+        <h1>PALACE CLUB</h1>
+        <div class="subtitle">DOSSIER DE REPRISE : FAMILLE MILES</div>
+    </header>
+
+    <div class="container">
+        
+        <!-- 1. VISION STRATEGIQUE -->
+        <section>
+            <h2>1. VISION : LE NÉO-PALACE</h2>
+            <p>Notre projet repose sur un concept fort : <span class="highlight">Le Néo-Palace</span>. Nous capturons l'âme des années 70/80 — l'extravagance et la liberté — pour la réinjecter dans un cadre moderne.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Esthétique</h3>
+                    <p>Velours sombre, néons tubulaires, miroirs fumés et boules à facettes géantes.</p>
+                </div>
+                <div class="card">
+                    <h3>Ambiance</h3>
+                    <p>Un retour à l'exclusivité où le style prime sur le reste. Une atmosphère électrique et intemporelle.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. ARGUMENTS DE REPRISE -->
+        <section>
+            <h2>2. POURQUOI NOUS ?</h2>
+            
+            <h3>A. Une Fratrie, Une Force</h3>
+            <p>La cohésion des Miles est notre premier atout. Une confiance absolue entre frères :</p>
+            <div class="grid" style="margin-bottom: 30px;">
+                <div class="card"><strong>DeAndré :</strong> Gestion & Direction Artistique.</div>
+                <div class="card"><strong>Lamar :</strong> Sécurité & Flux du sanctuaire.</div>
+                <div class="card"><strong>Snoopy :</strong> Opérations & Logistique bar.</div>
+            </div>
+
+            <h3>B. Renouvellement de Clientèle</h3>
+            <ul class="argument-list">
+                <li><strong>High-Rollers :</strong> Service VIP irréprochable.</li>
+                <li><strong>Artistes & Influenceurs :</strong> Séduits par le cachet esthétique "80s".</li>
+                <li><strong>Clientèle Fidèle :</strong> Ceux qui veulent revivre l'événement de "sortir en boîte".</li>
+            </ul>
+
+            <h3>C. Gestion & Transparence</h3>
+            <ul class="argument-list">
+                <li>Optimisation des revenus via une carte de cocktails signatures 70s.</li>
+                <li>Marketing agressif sur les réseaux pour faire du Palace le lieu le plus instagrammable.</li>
+            </ul>
+        </section>
+
+        <!-- 3. IMPACT SOCIAL -->
+        <section style="border-color: var(--gold); box-shadow: 0 0 15px var(--gold);">
+            <h2 style="color: var(--gold); border-color: var(--gold);">3. CRÉATION D'EMPLOIS</h2>
+            <p>Un moteur économique pour le secteur :</p>
+            <ul class="argument-list">
+                <li><span class="highlight">Recrutement Local :</span> Étoffement des équipes actuelles (Bar, Service, Accueil).</li>
+                <li><span class="highlight">Opportunités :</span> Postes fixes et contrats intermittents (DJs, Performers, Techniciens).</li>
+                <li><span class="highlight">Dynamisme :</span> Travail indirect pour les fournisseurs régionaux.</li>
+            </ul>
+        </section>
+
+        <!-- 4. PLAN D'ACTION -->
+        <section>
+            <h2>4. PLAN D'ACTION OPÉRATIONNEL</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Secteur</th>
+                        <th>Amélioration Prévue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Design</strong></td>
+                        <td>Modernisation complète en gardant les volumes historiques.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Programmation</strong></td>
+                        <td>Jeudis Disco-House, Vendredis New Wave, Samedis Modern Clubbing.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sécurité</strong></td>
+                        <td>Protocole strict et Dress code exigé (Image valorisée).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Technologie</strong></td>
+                        <td>Système son dernière génération et paiement dématérialisé.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- CONCLUSION -->
+        <section style="text-align: center; border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink);">
+            <h2>CONCLUSION</h2>
+            <p style="font-size: 1.2rem;">Le Palace Club s'essouffle. La fratrie <span class="highlight">Miles</span> a l'énergie et le concept pour transformer ce lieu en une légende urbaine.</p>
+            <div class="footer-miles">DEANDRE, LAMAR & SNOOPY MILES</div>
+        </section>
+
+    </div>
+
+    <footer style="text-align: center; padding: 30px; font-size: 0.8rem; color: #555;">
+        PALACE CLUB RECOVERY DOSSIER - MILES FAMILY - NO CITATIONS - FULL DISCO STYLE
+    </footer>
+
+</body>
+</html>
